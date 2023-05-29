@@ -2,6 +2,8 @@
 // Onboarding
 //--------------------------------
 
+// The data required for this case:
+
 .execute database script <|
 // Create a table for the telemetry data:
 .create table DetectiveCases(Timestamp:datetime, EventType:string, DetectiveId:string, CaseId: string, Properties:dynamic)
@@ -10,10 +12,59 @@
 .ingest async into table DetectiveCases (@'https://kustodetectiveagency.blob.core.windows.net/kda2start/log_00001.csv.gz')
 .ingest into table DetectiveCases (@'https://kustodetectiveagency.blob.core.windows.net/kda2start/log_00002.csv.gz')
 
+//----------------------------------
+// Goal: Find the 'DetectiveId' with the largest amount of bounty earned
+//----------------------------------
+
+//----------------------------------
+// Solution 
+//----------------------------------
+
 let bounties = DetectiveCases
     | where EventType == "CaseOpened"
     | extend Bounty = toreal(Properties.Bounty)
-    | distinct CaseId, Bounty;
+    | project CaseId, Bounty;
+DetectiveCases
+| where EventType == "CaseSolved"
+| summarize arg_min(Timestamp, DetectiveId) by CaseId
+| join kind=inner bounties on CaseId
+| summarize sum(Bounty) by DetectiveId
+| summarize arg_max(sum_Bounty, DetectiveId)
+
+
+
+//----------------------------------
+// Solution with detailed breakdowns
+//----------------------------------
+
+//----------------------------
+// 1. Let's find the bounty for each case:
+
+// The bounty per case can be found on the 'Properties' column
+// when the 'EventType' is 'CaseSolved'
+// The 'Properties' column is of dynamic type and contains 
+// a simple JSON with a single field 'Bounty"
+// Extract the bounty value from the JSON object
+// and create a new column 'Bounty', after converting the string to real
+// Finally, keep only the 'CaseId' and 'Bounty' columns
+let bounties = DetectiveCases
+| where EventType == "CaseOpened"
+| extend Bounty = toreal(Properties.Bounty)
+| project CaseId, Bounty;
+
+//----------------------------
+// 2. Calculate the total bounties for each detective and find maximum
+
+// - A case can be solved by >1 detectives. However, the bounty
+//   is only given to the one who solved it first.
+// - For each solved case, we should only keep the entry that represents
+//   the first solution to the case. 
+// - We use 'arg_min' operator to keep the rows for each solved 'CaseId' 
+//   with the earliest timestamp.
+// - Join with the previous result to get the column that shows the bounty
+//   for each solved case and the detective who got the bounty
+// - Calculate total bounties per detective
+// - Find detective with largest total
 DetectiveCases
 | where EventType == "CaseSolved"
 | summarize arg_min(Timestamp, DetectiveId) by CaseId
