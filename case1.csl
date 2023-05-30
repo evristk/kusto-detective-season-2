@@ -26,8 +26,10 @@
 
 Consumption
 | extend Consumed=abs(Consumed)
-| distinct *
+| distinct Timestamp, HouseholdId, Consumed, MeterType
 | summarize sum(Consumed) by MeterType
 | join kind=inner Costs on MeterType
 | summarize sum(sum_Consumed*Cost)
+
+
 
