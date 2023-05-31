@@ -31,3 +31,21 @@ Consumption
 | join kind=inner Costs on MeterType
 | summarize sum(sum_Consumed*Cost)
 
+
+//----------------------------------
+// Solution with detailed breakdowns
+//----------------------------------
+
+Consumption
+// Some readings had negative values, we fixed those by taking abs() of the consumption.
+| extend Consumed=abs(Consumed)
+// After converting negative values to positive, we have duplicates. We remove those with distinct
+| distinct *
+// We calculate total consumption for each meter type
+| summarize sum(Consumed) by MeterType
+// The Costs table has the price per unit for each meter type. We join it with total consumption
+| join kind=inner Costs on MeterType
+// The result at this point is two rows with total consumption and 
+// the price per unit for the corresponding meter type. Summing up 
+// the products of total consumption and unit costs gives us the total bill. 
+| summarize sum(sum_Consumed*Cost)
