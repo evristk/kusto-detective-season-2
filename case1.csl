@@ -31,5 +31,3 @@ Consumption
 | join kind=inner Costs on MeterType
 | summarize sum(sum_Consumed*Cost)
 
-
-
