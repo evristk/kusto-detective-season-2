@@ -1,8 +1,16 @@
 # kusto-detective-season-2
-Detailed explanations for Kusto Detective Season 2 cases, helping users understand and overcome challenges using the Kusto Query Language (KQL)
+Kusto Detective Agency Season 2! 
+
+This repo provides 
+- hints
+- helpful queries
+- explanations
+- and, solutions (one week after the case releases)!
 
 
 Solutions:
 - Onboarding
-- Case 1: To bill or not to bill?
+- Case 1: To bill or not to bill? [Solution
+- Case 2: Catch the Phishermen! [Solution]
+- Case 3: Return stolen cars! [Hints]
 
